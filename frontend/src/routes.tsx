@@ -6,7 +6,7 @@ import ButtonList from './components/buttonList.tsx'
 import Mainview from './Mainview.tsx'
 import CreateView from './CreateView.tsx'
 import RepoView , {repoLoader as loader} from './RepoView.tsx'
-
+import {newRepoAction} from './actions/newRepoAction.ts'
 import PrivateRoute from './PrivateRoutes.tsx'
 
 let isAuthenticated = true; //some auth logic
@@ -41,7 +41,8 @@ const routes = [
             },
             {
                 path:"createview",
-                element:<CreateView />
+                element:<CreateView />,
+                action: newRepoAction,
             },
             {
                 path: "repoview/:repoId",
