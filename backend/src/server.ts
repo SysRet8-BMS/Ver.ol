@@ -1,12 +1,14 @@
 import 'dotenv/config'; // Loads the .env variables
-import express, {Application, Request, Response} from 'express';
-import {connectDB, conn} from './config/db';
-import {initGridFS} from './config/gridfs';
-import repoRoutes from './routes/repoRoutes';
+import express from 'express'
+import type {Application, Request, Response} from 'express';
+import {connectDB, conn} from './config/db.js'
+
+import {initGridFS} from './config/multer.js';
+import {repoRouter} from './routes/repoRoutes.js';
 
 // Initialize DB and GridFS
 await connectDB();
-initGridFS(conn);
+await initGridFS(conn); // Wait for GridFS to be initialized
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
@@ -23,7 +25,7 @@ app.get('/', (req: Request, res: Response) => {
 
 
 // Main API Routes
-app.use('/app/repo', repoRoutes); // mounting repo routes
+app.use('/app/repo', repoRouter); // mounting repo routes
 
 
 // Starting Server

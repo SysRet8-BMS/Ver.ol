@@ -1,15 +1,22 @@
 import multer from 'multer';
 import 'dotenv/config';
-import { Connection, mongo } from 'mongoose';
+import { mongo } from 'mongoose';
+import type {Connection} from 'mongoose'
 
 // GridFS Bucket instance for streaming operations
 let gfs: mongo.GridFSBucket;
 
 // Initialize GridFS Bucket using mongoose connection
-const initGridFS = (conn: Connection): void => {
-    conn.once('open', () => {
-        gfs = new mongo.GridFSBucket(conn.db!, { bucketName: 'repo_files' });
-    });
+const initGridFS = async (conn: Connection): Promise<void> => {
+    // If connection is not open, wait for it
+    if (conn.readyState !== 1) {
+        await new Promise<void>((resolve) => {
+            conn.once('open', () => resolve());
+        });
+    }
+    
+    // Now we can safely initialize GridFS
+    gfs = new mongo.GridFSBucket(conn.db!, { bucketName: 'repo_files' });
     console.log(`GridFS Bucket Initialized.`);
 };
 

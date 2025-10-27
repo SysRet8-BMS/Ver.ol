@@ -5,20 +5,26 @@ import { Types } from 'mongoose';
 import { getGfs } from '../config/multer.js';
 import { v4 as uuidv4 } from 'uuid';
 
+import fs from "fs";
+import fsPromises from 'fs/promises'
+import path from 'path'
+
 // Replace this with the actual authenticated user ID later 
 const AUTHOR_ID = new Types.ObjectId('60d5ec49c69d7b0015b8d28e');
 
 // Extend Request to include file details from Multer's memoryStorage
-interface PushRequest extends Request {
+export interface PushRequest extends Request {
     file: Express.Multer.File & {buffer: Buffer; };
 }
 
-export const pushCommit = async (req: PushRequest, res: Response): Promise<void> => {
-    const repoName = req.params.repoName;
+export const pushCommit = async (req: Request, res: Response): Promise<void> => {
+
+    const repoName = req.body.repoName;
     const commitMessage = req.body.commitMessage || 'No message provided';
 
     // check if file exists or is empty.
-    if(!req.file || !req.file.buffer) {
+    const {buffer} = (req as PushRequest).file;
+    if(!req.file || !buffer) {
         res.status(400).json({error: 'No repository zip was uploaded or file is empty'});
         return;
     }
@@ -32,7 +38,7 @@ export const pushCommit = async (req: PushRequest, res: Response): Promise<void>
     let gridFSFileId: Types.ObjectId | null = null;
 
     try {
-        const fileBuffer = req.file.buffer;
+        const fileBuffer = buffer;
 
         // save file to gridfs (io operation)
         gridFSFileId = await storageService.uploadFileToGridFS(fileBuffer, repoName, commitMessage);
@@ -79,3 +85,4 @@ export const pushCommit = async (req: PushRequest, res: Response): Promise<void>
         });
     }
 };
+
