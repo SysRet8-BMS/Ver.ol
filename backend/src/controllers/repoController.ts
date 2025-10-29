@@ -5,9 +5,6 @@ import { Types } from 'mongoose';
 import { getGfs } from '../config/multer.js';
 import { v4 as uuidv4 } from 'uuid';
 
-import fs from "fs";
-import fsPromises from 'fs/promises'
-import path from 'path'
 
 // Replace this with the actual authenticated user ID later 
 const AUTHOR_ID = new Types.ObjectId('60d5ec49c69d7b0015b8d28e');

@@ -4,7 +4,7 @@ import fs from "fs";
 import type { Request, Response } from 'express';
 import type {PushRequest} from '../controllers/repoController.js'
 
-import {pushCommit} from "../controllers/repoController.js"
+import {uploadController} from "../controllers/repoController.js"
 export const repoRouter = express()
 
 // Make sure directories exist
@@ -19,5 +19,5 @@ either theres post request when user wants to
 upload zip,or get request when user clicks on repo
 and content of that repo is displayed
  */
-repoRouter.post("/upload", upload.single("zipfile"), pushCommit);
+repoRouter.post("/upload", uploadController);
 //repoRouter.get("/:repoId",repoViewController)
