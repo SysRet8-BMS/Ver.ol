@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import type {Connection} from 'mongoose'
 // mongoURI is either retrieved from .env or resolves to local instance
 // local instance is system-specific, add database_name in the URI
-const mongoURI: string = process.env.Mongo_URI || 'mongodb://localhost:27017/';
+const mongoURI: string = process.env.Mongo_URI || 'mongodb://localhost:27017/repo_files';
 
 
 // Connect to MongoDB

@@ -19,14 +19,17 @@
     "express": "^5.1.0",
     "mongoose": "^8.19.2",
     "multer": "^2.0.2",
+    "unzipper": "^0.12.3",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/busboy": "^1.5.4",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.4",
     "@types/mongoose": "^5.11.96",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.9.1",
+    "@types/unzipper": "^0.10.11",
     "@types/uuid": "^10.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
