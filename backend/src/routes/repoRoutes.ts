@@ -4,7 +4,7 @@ import fs from "fs";
 import type { Request, Response } from 'express';
 import type {PushRequest} from '../controllers/repoController.js'
 
-import {uploadController} from "../controllers/repoController.js"
+import {uploadController,getReposController} from "../controllers/repoController.js"
 export const repoRouter = express()
 
 // Make sure directories exist
@@ -20,4 +20,5 @@ upload zip,or get request when user clicks on repo
 and content of that repo is displayed
  */
 repoRouter.post("/upload", uploadController);
+repoRouter.get("/repos",getReposController); //should change to userid/repos but eh
 //repoRouter.get("/:repoId",repoViewController)

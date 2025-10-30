@@ -18,3 +18,6 @@ export const addNewCommit = async (repoName: string, commitData: ICommit, ownerI
 
     return repository;
 }
+export const getRepos = async(ownerId: Types.ObjectId)=>{
+    await Repository.find()
+}

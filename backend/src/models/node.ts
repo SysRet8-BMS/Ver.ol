@@ -1,4 +1,4 @@
-import {Schema, Types} from 'mongoose'
+import mongoose ,{Schema, Types, Model} from 'mongoose'
 
 export interface INode {
     id: Types.ObjectId;
@@ -46,3 +46,5 @@ export const NodeSchema = new Schema<INode> ({
         default: Date.now
     }
 });
+const Node: Model<INode> = mongoose.model<INode> ('Node', NodeSchema);
+export default Node;

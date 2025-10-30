@@ -11,6 +11,10 @@ export interface IRepository extends Document {
 }
 
 const RepositorySchema: Schema<IRepository> = new Schema ({
+    _id: {
+        type: String, // Use a custom string as the _id
+        required: true
+    },
     name: {
         type: String,
         required: true,

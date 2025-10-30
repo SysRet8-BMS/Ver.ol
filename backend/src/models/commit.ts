@@ -1,4 +1,4 @@
-import {Schema, Types} from 'mongoose'
+import mongoose, {Schema, Types, Model} from 'mongoose'
 
 // Interface - Defines the required fields for a single snapshot of the project state
 export interface ICommit {
@@ -37,7 +37,8 @@ export const CommitSchema = new Schema<ICommit> ({
     },
 
 });
-
+const Commit: Model<ICommit> = mongoose.model<ICommit> ('Commit', CommitSchema);
+export default Commit;
 /* 
     Some remarks:
 
