@@ -10,7 +10,7 @@ export interface IRepository extends Document {
     commits: ICommit[]; // array of version snapshots
 }
 
-const RepositorySchema: Schema<IRepository> = new Schema ({
+export const RepositorySchema: Schema<IRepository> = new Schema ({
     _id: {
         type: String, // Use a custom string as the _id
         required: true

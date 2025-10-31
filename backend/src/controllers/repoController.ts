@@ -15,6 +15,7 @@ import type {INode} from '../models/node.js';
 import Repository from '../models/repository.js'
 import Commit from '../models/commit.js'
 import Node from '../models/node.js'
+import User from '../models/user.js'
 
 // Replace this with the actual authenticated user ID later 
 // const AUTHOR_ID = new Types.ObjectId('60d5ec49c69d7b0015b8d28e');
@@ -151,6 +152,12 @@ export const uploadController = async (req: Request, res: Response): Promise<voi
                 owner:userId,
                 commits:commits
             })
+
+            //update user
+            await User.findByIdAndUpdate(userId,
+                {$push: {repoList:newRepo}}
+                
+            )
             if (!res.headersSent) {
                 console.log('\nAll files processed successfully.');
                 res.status(200).json({ 
@@ -171,19 +178,6 @@ export const uploadController = async (req: Request, res: Response): Promise<voi
     // 6. Pipe the incoming request stream to Busboy to start parsing
     req.pipe(bb);
 
-}
-
-export const getReposController = async(req:Request, res:Response): Promise<void> =>{
-    const repos = setTimeout(()=>{
-        [
-            {
-                repoName:'my repo',
-                repoId:'r1'
-            }
-        ]
-    },2000)
-    
-    res.send(repos)
 }
 
 
@@ -241,3 +235,23 @@ async function ensureFolders(repoId: Types.ObjectId, commitId: Types.ObjectId, e
     return parentNodeId;
 }
 
+export const getReposController = async (req: Request, res: Response): Promise<IRepository[] | void> => {
+    try {
+        const currentUser = await User.findById(req.params.userId)
+            .populate('repoList'); // This returns full IRepository objects
+
+        if (!currentUser) {
+            console.error('User not found')
+        }
+
+        // The returned value is an array of full IRepository documents (due to populate)
+        // We ensure the type is correctly asserted for the return line
+        const repoList = currentUser!.repoList as unknown as IRepository[]; 
+        console.log(repoList)
+        return repoList;
+
+    } catch (error) {
+        console.error("Error fetching repositories:", error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+};

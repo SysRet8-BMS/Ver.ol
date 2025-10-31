@@ -1,8 +1,6 @@
 import express from "express"
 import multer from "multer";
 import fs from "fs";
-import type { Request, Response } from 'express';
-import type {PushRequest} from '../controllers/repoController.js'
 
 import {uploadController,getReposController} from "../controllers/repoController.js"
 export const repoRouter = express()
@@ -19,5 +17,5 @@ upload zip,or get request when user clicks on repo
 and content of that repo is displayed
  */
 repoRouter.post("/upload", uploadController);
-repoRouter.get("/repos",getReposController); //should change to userid/repos but eh
-//repoRouter.get("/:repoId",repoViewController)
+repoRouter.get("/api/:userId/repos",getReposController);
+//repoRouter.get("api/:userId/:repoId",repoViewController)
