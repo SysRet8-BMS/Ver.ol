@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "node --loader ts-node/esm src/server.ts",
+    "dev": "nodemon --exec \"node --loader ts-node/esm\" src/server.ts",
     "build": "tsc"
   },
   "keywords": [],
@@ -31,6 +31,7 @@
     "@types/node": "^24.9.1",
     "@types/unzipper": "^0.10.11",
     "@types/uuid": "^10.0.0",
+    "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

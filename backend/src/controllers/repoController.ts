@@ -256,3 +256,64 @@ export const getReposController = async (req: Request, res: Response): Promise<R
         return res.status(500).json({ message: 'Internal server error.' });
     }
 };
+
+export const repoViewController = async(req:Request, res:Response):Promise<Response>=>{
+    const userId = req.params.userId;
+    const requestedRepoId = req.params.repoId;
+
+    if(!userId){
+        return res.status(400).json("No userId provided!")
+    }
+    if(!requestedRepoId){
+        return res.status(400).json("No repoId provided!")
+    }
+    //returns nodes of current user, of latest commit, whose parentId = repoId
+    const user = await User.findById(userId);
+    if(!user){
+        return res.status(400).json("Requested user does not exist")
+    }
+    const repoList = user.repoList; 
+
+    const requiredRepoId = repoList.find(repoId=> repoId.toString() === requestedRepoId);
+    if(!requiredRepoId){
+        return res.status(400).json("Repository does not belong to user/does not exist!");
+    }
+
+    const repo = await Repository.findById(requiredRepoId)
+    console.log(repo)
+    if(!repo){
+        return res.status(400).json("Repository does not exist in repository collection!")
+    }
+    const latestCommitId = (repo!.commits).at(-1);
+    const repoRoot:INode|null = await Node.findOne({commitId:latestCommitId, parentId:null})
+
+    if(!repoRoot){
+        return res.status(400).json("Root node for repository not found!")
+    }
+    console.log(repoRoot)
+    const nodes = await Node.find({commitId:latestCommitId,parentNodeId:repoRoot!._id})
+    return res.status(200).json(nodes)
+
+
+}
+//could merge above and this in future, for now lets keep these 2 seperate
+export const getNodesController = async(req:Request,res:Response):Promise<Response>=>{
+    const userId = req.params.userId;
+    const requestedCommitId = req.params.commitId;
+    const requestedNodeId = req.params.nodeId;
+
+    if(!userId){
+        return res.status(400).json("No userId provided!")
+    }
+    if(!requestedNodeId){
+        return res.status(400).json("No nodeId provided!")
+    }
+    //returns nodes of current user, of latest commit, whose parentId = repoId
+    const user = await User.findById(userId);
+    if(!user){
+        return res.status(400).json("Requested user does not exist")
+    }
+
+    const nodes = await Node.find({commitId:requestedCommitId,parentNodeId:requestedNodeId!})
+    return res.status(200).json(nodes)
+}
