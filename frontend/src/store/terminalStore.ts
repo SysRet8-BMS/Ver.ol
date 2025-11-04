@@ -14,8 +14,10 @@ type TerminalState = {
     clearStore: ()=>void;
 }
 export const useTerminalStore = create<TerminalState> ((set,get)=>({
-    repoName:useRepoStore.getState().repoName,
-    pwd:`/${useRepoStore.getState().repoName}`,
+    // repoName:useRepoStore.getState().repoName,
+    // pwd:`/${useRepoStore.getState().repoName}`,
+    repoName:'',
+    pwd:'',
     mode:'viewing',
     setRepo: (repoName: string) => {
         set({
@@ -33,7 +35,12 @@ export const useTerminalStore = create<TerminalState> ((set,get)=>({
             console.log(pwd);
             const output = useRepoStore.getState().listAll(pwd);
             return output;
-        },        // cd:(directory)=>useRepoStore.getState().cwd(), //no data mutation
+        }, 
+        cd:async (directory)=>{
+            const {pwd} = useTerminalStore.getState();
+            const output = await useRepoStore.getState().cwd(pwd,directory);
+            return output;
+        }, //no data mutation,
         mv:(childNode, newParentNode)=>useRepoStore.getState().moveNode(childNode,newParentNode),
         help: () => "Available commands: pwd, whoami, echo,ls,cd,mv,rename,delete,stage,commit,help",
 

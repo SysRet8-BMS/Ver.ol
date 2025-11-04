@@ -1,16 +1,18 @@
 import { create } from "zustand";
 import type {UINode} from '../types'
-
+import {useTerminalStore} from '../store/terminalStore'
+import {appendChildrenNodes} from '../utils/helper'
 
 type RepoState = {
   repoId:string,
   repoName:string,
-  nodes: UINode[];
-  setNodes: (nodes: UINode[]) => void;
+  nodes: UINode[],
+  setNodes: (nodes: UINode[]) => void,
   moveNode:(childNode:string,newParentNode:string)=>string,
   listAll:(pwd:string)=>string,
-  appendChildren: (parentId: string, children: UINode[]) => void;
-  toggleExpand: (nodeId: string) => void;
+  cwd:(pwd: string, directory: string) => Promise<string>,
+  appendChildren: (parentId: string, children: UINode[]) => void,
+  toggleExpand: (nodeId: string) => void,
   clearStore: () => void;
 };
 function findcwdNode(pwd: string): UINode | null {
@@ -55,6 +57,28 @@ export const useRepoStore = create<RepoState>((set) => ({
         .join('\n');
     },
 
+  cwd:async (pwd:string,directory:string)=>{
+
+    if(directory === '..'){
+      const pathParts =  pwd.split('/').filter(Boolean);
+      const parentPath = pathParts.slice(0,-1).join('/');
+      console.log('switched back to',parentPath);
+      useTerminalStore.setState({pwd:parentPath});
+      return `Switched back to ${parentPath}`
+    }
+    const cwdNode = findcwdNode(pwd);
+    if (!cwdNode) return 'Invalid pwd path';
+    //first find dir in children of cwdNode
+    //if dir exists, set pwd,load its children
+    const dir = cwdNode.children?.find(child=>child.type==='folder' && child.name===directory);
+    if(!dir) return `${directory} not found!`;
+    useTerminalStore.setState({pwd:`${pwd}/${dir.name}`});
+    //load dir's children too
+    await appendChildrenNodes(dir);
+
+    return `Changed directory to ${dir.name}`
+
+  },
   moveNode:(childNode:string,parentNode:string)=>{
     //if file, set childNode parentId to parentNode id
     return `Moved ${childNode} to ${parentNode}`

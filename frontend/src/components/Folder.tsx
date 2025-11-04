@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronRight, ChevronDown, Folder as FolderIcon } from "lucide-react";
 import { useRepoStore } from "../store/repoStore";
 import File from "./File";
-import {authFetch} from '../utils/authFetch'
+import {appendChildrenNodes} from '../utils/helper'
 
 import type {UINode} from '../types'
 function findNode(nodes:UINode[], id:string):UINode|null {
@@ -16,11 +16,10 @@ function findNode(nodes:UINode[], id:string):UINode|null {
   return null;
 }
 
-const BASE_URL = import.meta.env.VITE_BASE_URL
 export default function Folder({ nodeId, level }:{nodeId:string,level:number}) {
   const [loading, setLoading] = useState(false);
   const node = useRepoStore((state) => findNode(state.nodes, nodeId));
-  const { appendChildren, toggleExpand } = useRepoStore();
+  const { toggleExpand } = useRepoStore();
   if (!node) return null; // safety guard
 
   console.log(`${node.name} is expanded: ${node.isExpanded}`)
@@ -28,10 +27,7 @@ export default function Folder({ nodeId, level }:{nodeId:string,level:number}) {
     if (!node.isExpanded && (!node.children || node.children.length === 0)) {
       // lazy load children
       setLoading(true);
-      const res = await authFetch(`${BASE_URL}/app/repo/api/${node.commitId}/${node._id}`);
-      const children = await res.json();
-      console.log(`Children of ${node.name}`,children)
-      appendChildren(node._id, children);
+      await appendChildrenNodes(node);
       setLoading(false);
     }
     toggleExpand(node._id);

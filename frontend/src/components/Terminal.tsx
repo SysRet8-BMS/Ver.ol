@@ -8,7 +8,7 @@ export default function Terminal() {
       <TerminalContextProvider>
         <ReactTerminal
           commands={useTerminalStore.getState().commands}
-          prompt={`${useAuthStore.getState().userName}@verol:$${useTerminalStore.getState().pwd}`}
+          prompt={`${useAuthStore.getState().userName}@verol:$${useTerminalStore(state=>state.pwd)}`}
           theme="material-dark"
         />
       </TerminalContextProvider>
