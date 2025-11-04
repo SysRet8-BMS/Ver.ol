@@ -1,52 +1,131 @@
 import { create } from "zustand";
-import {useRepoStore} from './repoStore'
-import {useAuthStore} from './authStore'
+import { useRepoStore } from "./repoStore";
+import { useAuthStore } from "./authStore";
+import {listAll,cwd,renameHelper} from '../utils/helper'
 
-export type TerminalCommand = (...args: string[]) => string | Promise<string>;
+interface TerminalState {
+  repoName: string;
+  pwd: string;
+  awaitingInput: boolean;
+  inputPrompt?: string;
+  awaitingDiscardConfirm:boolean;
 
-type TerminalState = {
-    repoName:string,
-    pwd:string,
-    mode:string,
-
-    commands: Record<string, TerminalCommand>;
-    setRepo:(repoName:string)=>void;
-    clearStore: ()=>void;
+  onInput?: (input: string) => string;
+  setRepo: (repoName: string) => void;
+  defaultHandler:()=>string;
+  commands: Record<string, (...args: string[]) => string | Promise<string>>;
 }
-export const useTerminalStore = create<TerminalState> ((set,get)=>({
-    // repoName:useRepoStore.getState().repoName,
-    // pwd:`/${useRepoStore.getState().repoName}`,
-    repoName:'',
-    pwd:'',
-    mode:'viewing',
-    setRepo: (repoName: string) => {
-        set({
-            repoName,
-            pwd: `/${repoName}`,
-        });
+
+export const useTerminalStore = create<TerminalState>((set, get) => ({
+  repoName: "",
+  pwd: "/",
+  awaitingInput: false,
+  inputPrompt: undefined,
+  onInput: undefined,
+  awaitingDiscardConfirm: false, 
+
+  defaultHandler:()=>{
+      const awaitDiscardConfirm = get().awaitingDiscardConfirm;
+      if(awaitDiscardConfirm) return '';
+
+      return 'command not found!'
+  },
+  setRepo: (repoName: string) => {
+    set({
+      repoName,
+      pwd: `/${repoName}`,
+    });
+  },
+  commands: {
+    pwd: () => {
+      const awaitDiscardConfirm = get().awaitingDiscardConfirm;
+      if(awaitDiscardConfirm) return '';
+      return get().pwd
     },
 
-    commands:{
-        pwd:()=>get().pwd,
-        whoami:()=>useAuthStore.getState().userName!,
-        echo: (text: string) => text,
-        ls: () => {
-            const {pwd} = useTerminalStore.getState();
-            console.log(pwd);
-            const output = useRepoStore.getState().listAll(pwd);
-            return output;
-        }, 
-        cd:async (directory)=>{
-            const {pwd} = useTerminalStore.getState();
-            const output = await useRepoStore.getState().cwd(pwd,directory);
-            return output;
-        }, //no data mutation,
-        mv:(childNode, newParentNode)=>useRepoStore.getState().moveNode(childNode,newParentNode),
-        help: () => "Available commands: pwd, whoami, echo,ls,cd,mv,rename,delete,stage,commit,help",
+    whoami: () => {
+      const awaitDiscardConfirm = get().awaitingDiscardConfirm;
+      if(awaitDiscardConfirm) return '';
 
-
+      return useAuthStore.getState().userName ?? "unknown"
     },
-    clearStore:()=>{
-        set({mode:'viewing'})
-    }
-}))
+
+    echo: (text: string) => {
+      const awaitDiscardConfirm = get().awaitingDiscardConfirm;
+      if(awaitDiscardConfirm) return '';
+      return text
+    },
+
+    ls: () => {
+      const awaitDiscardConfirm = get().awaitingDiscardConfirm;
+      if(awaitDiscardConfirm) return ''; //basically dont allow users to do stuff if waiting for confirmation
+      const { pwd } = get();
+      const output = listAll(pwd);
+      return output;
+    },
+
+    cd: async (directory: string) => {
+      const awaitDiscardConfirm = get().awaitingDiscardConfirm;
+      if(awaitDiscardConfirm) return '';
+      const { pwd } = get();
+      const output = await cwd(pwd, directory);
+      return output;
+    },
+
+    mode: (modeVal: string) => {
+      const awaitDiscardConfirm = get().awaitingDiscardConfirm;
+      if(awaitDiscardConfirm) return '';
+
+      if (!modeVal) return useRepoStore.getState().mode;
+
+      if (modeVal === "staging") {
+        useRepoStore.getState().setMode(modeVal);
+        set({ awaitingDiscardConfirm: false });
+        return `Changed mode to: ${modeVal}`;
+      }
+
+      if (modeVal === "viewing") {
+        // enter confirmation mode
+        useRepoStore.getState().setMode(modeVal);
+
+        set({ awaitingDiscardConfirm: true });
+        return "Discard currently staged changes? (y/n)";
+      }
+
+      return "Invalid mode value: must be 'staging' or 'viewing'";
+    },
+    mv: (childNode: string, newParentNode: string) => {
+      useRepoStore.getState().moveNode(childNode, newParentNode);
+      return "";
+    },
+    rename:(args:string)=>{ //allows rename of nodes only in staging mode and nodes in present working directory
+      const [oldName, newName] = args.trim().split(' ');
+      console.log(oldName,newName)
+      const output = renameHelper(oldName,newName)
+      return output;
+    },
+    y: () => {
+      const { awaitingDiscardConfirm } = get();
+      if (!awaitingDiscardConfirm) return "command not found";
+
+      set({ awaitingDiscardConfirm: false });
+      useRepoStore.setState({ mode: "viewing" ,stagedChanges:[]}); //clear stagedChanges
+      console.log('Staged changees after discarding',useRepoStore.getState().stagedChanges);
+      return "Discarded changes, now in viewing mode";
+    },
+    n: () => {
+      const { awaitingDiscardConfirm } = get();
+      if (!awaitingDiscardConfirm) return "command not found";
+
+      set({ awaitingDiscardConfirm: false });
+      return "Cancelled, staying in staging mode";
+    },
+
+
+
+    help: () =>
+      "Available commands: pwd, whoami, echo, ls, cd, mode, mv,rename,delete, help",
+    
+  },
+
+}));

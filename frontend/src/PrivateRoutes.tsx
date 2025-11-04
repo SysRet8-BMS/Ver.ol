@@ -1,22 +1,21 @@
 // PrivateRoute.tsx
 import { Navigate} from "react-router";
-import App from './App'
+import { useAuthStore } from "./store/authStore";
 
 interface PrivateRouteProps {
-  isAuthenticated: boolean;
   redirectPath?: string;
-  children?: React.ReactNode;
+  children: React.ReactNode;
 }
 
 export default function PrivateRoute({
-  isAuthenticated,
   redirectPath = "/login",
   children,
 }: PrivateRouteProps) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   if (!isAuthenticated) {
     return <Navigate to={redirectPath} replace />;
   }
 
   // If children are passed, render them, else render nested routes
-  return children ? <>{children}</> : <App />;
+  return <>{children}</>;
 }

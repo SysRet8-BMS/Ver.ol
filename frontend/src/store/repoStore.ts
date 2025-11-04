@@ -1,87 +1,51 @@
 import { create } from "zustand";
-import type {UINode} from '../types'
-import {useTerminalStore} from '../store/terminalStore'
-import {appendChildrenNodes} from '../utils/helper'
+import type {UINode, Change} from '../types'
 
-type RepoState = {
-  repoId:string,
-  repoName:string,
-  nodes: UINode[],
-  setNodes: (nodes: UINode[]) => void,
-  moveNode:(childNode:string,newParentNode:string)=>string,
-  listAll:(pwd:string)=>string,
-  cwd:(pwd: string, directory: string) => Promise<string>,
-  appendChildren: (parentId: string, children: UINode[]) => void,
-  toggleExpand: (nodeId: string) => void,
+
+
+interface RepoState {
+  repoId: string;
+  repoName: string;
+  nodes: UINode[];
+  stagedNodes: UINode[];
+  stagedChanges: Change[];
+  mode: "viewing" | "staging";
+
+  // actions
+  setRepoInfo: (id: string, name: string) => void;
+  setNodes: (nodes: UINode[]) => void;
+  setMode: (mode: "viewing" | "staging") => void;
+  moveNode: (childNode: string, parentNode: string) => string;
+  appendChildren: (parentId: string, children: UINode[]) => void;
+  toggleExpand: (nodeId: string) => void;
   clearStore: () => void;
-};
-function findcwdNode(pwd: string): UINode | null {
-  const repoNodes = useRepoStore.getState().nodes;
-  console.log('repoNodes', repoNodes)
-
-  // handle root
-  const pathParts = pwd.split('/').filter(Boolean);
-  console.log(pathParts)
-  if(pathParts.length === 0) return null;
-  // split and remove empty parts (caused by leading "/")
-
-  // start at root folder
-  let cwdNode = repoNodes.find(n=>n.type==='folder' && n.parentNodeId===null);
-  if (!cwdNode) return null;//should never happen
-
-  // walk down the path
-  for (let i = 1; i < pathParts.length; i++) {
-    cwdNode =
-      cwdNode.children?.find(
-        n => n.type === 'folder' && n.name === pathParts[i]
-      );
-
-    if (!cwdNode) return null;
-  }
-
-  return cwdNode;
 }
-export const useRepoStore = create<RepoState>((set) => ({
-  repoId:'',
-  repoName:'',
+
+export const useRepoStore = create<RepoState>((set, get) => ({
+  repoId: "",
+  repoName: "",
   nodes: [],
+  stagedNodes: [],
+  stagedChanges: [],
+  mode: "viewing",
+
+  setRepoInfo: (id, name) => set({ repoId: id, repoName: name }),
 
   setNodes: (nodes) => set({ nodes }),
-  listAll: (pwd: string) => {
-      const cwdNode = findcwdNode(pwd);
-      if (!cwdNode) return 'Invalid pwd path';
-      if (!cwdNode.children || cwdNode.children.length === 0) return '(empty folder)';
 
-      return cwdNode.children
-        .map(child => child.type==='folder' ? child.name.concat('/'):child.name)
-        .join('\n');
-    },
-
-  cwd:async (pwd:string,directory:string)=>{
-
-    if(directory === '..'){
-      const pathParts =  pwd.split('/').filter(Boolean);
-      const parentPath = pathParts.slice(0,-1).join('/');
-      console.log('switched back to',parentPath);
-      useTerminalStore.setState({pwd:parentPath});
-      return `Switched back to ${parentPath}`
+  setMode: (mode) => {
+    if (mode === "staging") {
+      // Deep clone nodes into stagedNodes
+      const cloned = structuredClone(get().nodes);
+      set({ stagedNodes: cloned, mode });
+    } else {
+      set({ stagedNodes: [], mode });
     }
-    const cwdNode = findcwdNode(pwd);
-    if (!cwdNode) return 'Invalid pwd path';
-    //first find dir in children of cwdNode
-    //if dir exists, set pwd,load its children
-    const dir = cwdNode.children?.find(child=>child.type==='folder' && child.name===directory);
-    if(!dir) return `${directory} not found!`;
-    useTerminalStore.setState({pwd:`${pwd}/${dir.name}`});
-    //load dir's children too
-    await appendChildrenNodes(dir);
-
-    return `Changed directory to ${dir.name}`
-
   },
-  moveNode:(childNode:string,parentNode:string)=>{
-    //if file, set childNode parentId to parentNode id
-    return `Moved ${childNode} to ${parentNode}`
+
+  moveNode: (childNode, parentNode) => {
+    // You can implement move logic here later
+    return `Moved ${childNode} to ${parentNode}`;
   },
 
   appendChildren: (parentId, children) =>
@@ -99,7 +63,11 @@ export const useRepoStore = create<RepoState>((set) => ({
           }
           return n;
         });
-      return { nodes: attachChildren(state.nodes) };
+
+      const targetKey =
+        state.mode === "staging" ? "stagedNodes" : "nodes";
+
+      return { [targetKey]: attachChildren(state[targetKey]) } as Partial<RepoState>;
     }),
 
   toggleExpand: (nodeId) =>
@@ -114,8 +82,12 @@ export const useRepoStore = create<RepoState>((set) => ({
           }
           return n;
         });
-      return { nodes: toggle(state.nodes) };
+
+      const targetKey =
+        state.mode === "staging" ? "stagedNodes" : "nodes";
+
+      return { [targetKey]: toggle(state[targetKey]) } as Partial<RepoState>;
     }),
 
-  clearStore: () => set({ nodes: [] }),
+  clearStore: () => set({ nodes: [], stagedNodes: [] }),
 }));

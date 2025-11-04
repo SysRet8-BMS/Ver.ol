@@ -12,7 +12,6 @@ import RepoView from './RepoView.tsx'
 import {newRepoAction} from './actions/newRepoAction.ts'
 import {loginAction, signUpAction} from './actions/authActions.ts'
 import PrivateRoute from './PrivateRoutes.tsx'
-import {useAuthStore} from './store/authStore.ts'
 
 import {reposLoader} from './loaders/reposLoader.ts'
 import {repoNodesLoader} from './loaders/nodeLoader.ts'
@@ -41,7 +40,7 @@ const routes:RouteObject[] = [
     },
     {
         path:"/app",
-        element: <PrivateRoute isAuthenticated={useAuthStore.getState().isAuthenticated}><App /></PrivateRoute>,
+        element: (<PrivateRoute><App /></PrivateRoute>),
         loader: reposLoader,
         errorElement: <ErrorPage />,
 
