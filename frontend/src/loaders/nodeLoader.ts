@@ -7,7 +7,6 @@ import {useTerminalStore} from '../store/terminalStore'
 //also pass the reporoot node along with its top level children
 export async function repoNodesLoader({ params }: LoaderFunctionArgs){
     const {repoId, repoName} = params;
-
     if(repoId!= useRepoStore.getState().repoId){
         //navigating to different/initial repository
         console.log('in repoNodes loader',repoName)

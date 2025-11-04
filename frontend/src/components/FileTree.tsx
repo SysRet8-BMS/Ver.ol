@@ -1,21 +1,21 @@
 import Folder from "./Folder";
 import File from "./File";
-import type {UINode} from '../types'
+import type { UINode } from "../types";
 
-export default function FileTree(props:{nodes:UINode[]}) {
+export default function FileTree({ nodes }: { nodes: UINode[] }) {
+  if (!nodes || nodes.length === 0) return <div>No files</div>;
 
-    const nodes = props.nodes;
+  return (
+    <div className="font-mono text-sm">
+      {nodes.map((node) => {
+        if (node.parentNodeId === null) return null;
 
-    return (
-        <div className="font-mono text-sm">
-            {nodes.map((node) =>
-            
-                node.type === "folder" &&node.parentNodeId!==null ? (
-                <Folder key={node._id} nodeId={node._id} level={0} />
-                ) : node.parentNodeId!==null?(
-                <File key={node._id} node={node} level={0} />
-                ):<div key={node._id}></div>
-            )}
-        </div>
+        if (node.type === "folder") {
+          return <Folder key={node._id} nodeId={node._id} level={0} />;
+        } else {
+          return <File key={node._id} node={node} level={0} />;
+        }
+      })}
+    </div>
   );
 }
