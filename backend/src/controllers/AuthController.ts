@@ -78,7 +78,7 @@ export const logIn = async (req: Request, res: Response, next: NextFunction): Pr
                     token,
                     user: {
                             id: (user as IUser).id,
-                        email: (user as IUser).email
+                        userName:(user as IUser).username
                     }
                 });
             } catch (error) {

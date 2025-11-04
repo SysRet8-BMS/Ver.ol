@@ -319,9 +319,13 @@ export const repoViewController = async(req:Request, res:Response):Promise<Respo
     if(!repoRoot){
         return res.status(400).json("Root node for repository not found!")
     }
-    console.log(repoRoot)
-    const nodes = await Node.find({commitId:latestCommitId,parentNodeId:repoRoot!._id})
-    return res.status(200).json(nodes)
+    console.log('repoRoot in controller',repoRoot)
+    const repoNodes = await Node.find({commitId:latestCommitId,parentNodeId:repoRoot!._id})
+    console.log('nodes in repoViewcontroller',repoNodes);
+    return res.status(200).json({
+        repoRoot,
+        repoNodes
+    })
 
 
 }

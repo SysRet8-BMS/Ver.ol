@@ -2,14 +2,18 @@ import {authFetch} from '../utils/authFetch'
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 import type {LoaderFunctionArgs} from 'react-router'
 import {useRepoStore} from '../store/repoStore'
+import {useTerminalStore} from '../store/terminalStore'
 
+//also pass the reporoot node along with its top level children
 export async function repoNodesLoader({ params }: LoaderFunctionArgs){
     const {repoId, repoName} = params;
 
     if(repoId!= useRepoStore.getState().repoId){
         //navigating to different/initial repository
+        console.log('in repoNodes loader',repoName)
         useRepoStore.getState().clearStore()
         useRepoStore.setState({repoId:repoId, repoName:repoName})
+        useTerminalStore.getState().setRepo(repoName!)
         console.log('Navigating to new repo',repoName,repoId)
     }
     console.log('repository id:',repoId)
@@ -25,9 +29,12 @@ export async function repoNodesLoader({ params }: LoaderFunctionArgs){
         if(!res.ok){
             throw new Error(`HTTP error! status: ${res.status}`);
         }
-        const repoNodes = await res.json();
-        console.log(repoNodes)
-        useRepoStore.getState().setNodes(repoNodes)
+        const {repoRoot,repoNodes} = await res.json();
+        console.log('the repo nodes',repoNodes)
+        console.log('the root node: ',repoRoot)
+        useRepoStore.getState().setNodes([...repoNodes,repoRoot])
+        useRepoStore.getState().appendChildren(repoRoot._id,repoNodes);
+        console.log('repoNodes in store',useRepoStore.getState().nodes)
         return useRepoStore.getState().nodes;//newly modified nodes
         
     }

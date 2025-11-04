@@ -1,17 +1,14 @@
 import { ReactTerminal, TerminalContextProvider } from "react-terminal";
+import {useAuthStore} from '../store/authStore'
+import {useTerminalStore} from '../store/terminalStore'
 
 export default function Terminal() {
-  const commands = {
-    help: () => "Available commands: help, echo, greet",
-    echo: (text: string) => text,
-    greet: (name: string) => `Hello, ${name || "stranger"}!`,
-  };
   return (
     <div>
       <TerminalContextProvider>
         <ReactTerminal
-          commands={commands}
-          
+          commands={useTerminalStore.getState().commands}
+          prompt={`${useAuthStore.getState().userName}@verol:$${useTerminalStore.getState().pwd}`}
           theme="material-dark"
         />
       </TerminalContextProvider>
