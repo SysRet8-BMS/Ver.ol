@@ -170,9 +170,10 @@ function moveInTree(
         ...srcNode, 
         parentNodeId: newParentId 
       };
+      const updatedChildren = moveInTree(node.children!, srcNode, oldParentId, newParentId); //matching a parent folder so not null
       return {
         ...node,
-        children: [...(node.children || []), movedNode],
+        children: [...(updatedChildren || []), movedNode],
       };
     }
 
@@ -189,6 +190,7 @@ function moveInTree(
 }
 
 export async function move(src: string, dest: string) {
+  console.log('src: ',src,'dest: ',dest)
   const mode = useRepoStore.getState().mode;
   if (mode !== "staging") return "Please switch to staging mode!";
   if (!src || !dest) return "Invalid input";
@@ -200,6 +202,29 @@ export async function move(src: string, dest: string) {
   const srcNode = currWorkingDir.children?.find(n => n.name === src);
   if (!srcNode) return `${src} not found in current directory!`;
 
+
+  if(dest === '..'){
+    const destNodeId = currWorkingDir.parentNodeId;
+    if(!destNodeId) return 'Cannot move to parent of root directory!';
+    const stagedNodes = structuredClone(useRepoStore.getState().stagedNodes);
+
+    const destNode = stagedNodes.find(node=>node._id === destNodeId);
+    if(!destNode) return `Error while moving to parent directory of ${src}`;
+    console.log('staged nodes inside move',stagedNodes)
+    const finalNodes = moveInTree(stagedNodes, srcNode, currWorkingDir._id, destNodeId);
+
+    useRepoStore.setState({ stagedNodes: finalNodes });
+    console.log('finalNodes after moving',finalNodes);
+    const stagedChanges = useRepoStore.getState().stagedChanges;
+    const change: Change = {
+      type: "move",
+      nodeId: srcNode._id,
+      payload: { src:srcNode.name,dest:destNode.name,newParentId: destNode._id },
+    };
+    useRepoStore.setState({ stagedChanges: [...stagedChanges, change] });
+
+    return `Moved ${src} to ${destNode.name}`;
+  }
   const destNode = currWorkingDir.children?.find(
     n => n.type === "folder" && n.name === dest
   );

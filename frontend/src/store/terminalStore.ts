@@ -95,7 +95,9 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
       return "Invalid mode value: must be 'staging' or 'viewing'";
     },
     mv: async (args:string) => {
-      const [src, dest] = args.trim().split(' ');
+      const [src, destRaw] = args.trim().split(/\s+/);
+      const dest = destRaw?.trim().replace(/\s/g, '');
+      
       console.log('Attempt to move ',src,' to ',dest);
       const output = await move(src,dest);
       return output;
