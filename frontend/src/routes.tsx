@@ -1,4 +1,5 @@
 import type { RouteObject } from 'react-router'
+import {redirect} from 'react-router'
 
 import LandingPage from './LandingPage.tsx'
 import SignUp from './SignUp.tsx'
@@ -15,6 +16,8 @@ import PrivateRoute from './PrivateRoutes.tsx'
 
 import {reposLoader} from './loaders/reposLoader.ts'
 import {repoNodesLoader} from './loaders/nodeLoader.ts'
+import {useAuthStore} from './store/authStore.ts';
+
 const routes:RouteObject[] = [
     {
         path: "/",
@@ -35,6 +38,13 @@ const routes:RouteObject[] = [
                 element: <Login></Login>,
                 action:loginAction
             },
+            {
+                path:'logout',
+                loader:()=>{
+                    useAuthStore.getState().logout();
+                    return redirect('/login')
+                }
+            }
         ],
 
     },

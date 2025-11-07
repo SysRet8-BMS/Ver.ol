@@ -5,22 +5,21 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  
 } from "@/components/ui/navigation-menu"
-
 // 1. Define your list of navigation data
 const navItems = [
   { 
     id: 1, 
-    trigger: "Home", 
-    contentLink: "/", 
-    contentLabel: "Go Home" 
+    trigger:"Log out",
+    contentLink: '/logout',
+    contentLabel: "Log out"
+
   },
   { 
     id: 2, 
-    trigger: "About Us", 
-    contentLink: "/about", 
-    contentLabel: "Learn More" 
+    trigger: "Home", 
+    contentLink: "/", 
+    contentLabel: "Go Home" 
   },
   {
     id:3,
@@ -30,9 +29,9 @@ const navItems = [
   },
   {
     id:4,
-    trigger:"My Profile",
-    contentLink: "/myprofile",
-    contentLabel: "My Profile"
+    trigger: "About Us", 
+    contentLink: "/about", 
+    contentLabel: "Learn More" 
   }
   // Add more items as needed
 ];
