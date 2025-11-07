@@ -78,6 +78,7 @@ export async function cwd(pwd: string, directory: string){
     if(directory === '..'){
       const pathParts =  pwd.split('/').filter(Boolean);
       const parentPath = pathParts.slice(0,-1).join('/');
+      if(!parentPath) return 'Cannot move to parent of root directory!';
       useTerminalStore.setState({pwd:parentPath});
       return `Switched back to ${parentPath}`
     }
