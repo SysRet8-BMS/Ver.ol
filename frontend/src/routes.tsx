@@ -13,7 +13,9 @@ import RepoView from './RepoView.tsx'
 import {newRepoAction} from './actions/newRepoAction.ts'
 import {loginAction, signUpAction} from './actions/authActions.ts'
 import PrivateRoute from './PrivateRoutes.tsx'
+import FileView from './FileView.tsx'
 
+import {fileContentLoader} from './loaders/fileLoader.ts'
 import {reposLoader} from './loaders/reposLoader.ts'
 import {repoNodesLoader} from './loaders/nodeLoader.ts'
 import {useAuthStore} from './store/authStore.ts';
@@ -69,6 +71,12 @@ const routes:RouteObject[] = [
                 element: <RepoView />,
                 loader: repoNodesLoader,
                 errorElement: <ErrorPage />,
+            },
+            {
+                path:"fileview/:fileId/:fileName",
+                element: <FileView />,
+                loader: fileContentLoader,
+                errorElement: <ErrorPage />
             }
         ]
     }

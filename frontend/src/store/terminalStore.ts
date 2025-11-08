@@ -12,13 +12,15 @@ interface TerminalState {
 
   onInput?: (input: string) => string;
   setRepo: (repoName: string) => void;
+  getPwd:()=>string;
+  setPwd:(pathName:string)=>void;
   defaultHandler:()=>string;
   commands: Record<string, (...args: string[]) => string | Promise<string>>;
 }
 
 export const useTerminalStore = create<TerminalState>((set, get) => ({
   repoName: "",
-  pwd: "/",
+  pwd: "",
   awaitingInput: false,
   inputPrompt: undefined,
   onInput: undefined,
@@ -36,11 +38,22 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
       pwd: `/${repoName}`,
     });
   },
+  getPwd:()=>{
+    const {pwd} = get();
+    return pwd || localStorage.getItem('pwd')!;
+  },
+  setPwd:(pathName:string)=>{
+    set({
+      pwd:pathName
+    })
+    localStorage.setItem('pwd',pathName)
+  },
   commands: {
     pwd: () => {
       const awaitDiscardConfirm = get().awaitingDiscardConfirm;
       if(awaitDiscardConfirm) return '';
-      return get().pwd
+      const {getPwd} = get();
+      return getPwd();
     },
 
     whoami: () => {
@@ -59,7 +72,8 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     ls: () => {
       const awaitDiscardConfirm = get().awaitingDiscardConfirm;
       if(awaitDiscardConfirm) return ''; //basically dont allow users to do stuff if waiting for confirmation
-      const { pwd } = get();
+      const {getPwd} = get();
+      const pwd = getPwd();
       const output = listAll(pwd);
       return output;
     },
@@ -67,7 +81,8 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     cd: async (directory: string) => {
       const awaitDiscardConfirm = get().awaitingDiscardConfirm;
       if(awaitDiscardConfirm) return '';
-      const { pwd } = get();
+      const {getPwd} = get();
+      const pwd = getPwd();
       const output = await cwd(pwd, directory);
       return output;
     },

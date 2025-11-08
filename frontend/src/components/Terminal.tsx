@@ -4,7 +4,7 @@ import { useTerminalStore } from "../store/terminalStore";
 
 export default function Terminal() {
   const userName = useAuthStore.getState().userName|| useAuthStore.getInitialState().userName;
-  const pwd = useTerminalStore((s) => s.pwd);
+  const pwd = useTerminalStore((s) => s.getPwd());
   const awaitingDiscardConfirm = useTerminalStore((s) => s.awaitingDiscardConfirm);
 
   // grab functions/objects with their own selectors so the component only subscribes to what it needs

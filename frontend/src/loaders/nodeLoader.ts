@@ -12,6 +12,7 @@ export async function repoNodesLoader({ params }: LoaderFunctionArgs){
         console.log('in repoNodes loader',repoName)
         useRepoStore.getState().clearStore()
         useRepoStore.setState({repoId:repoId, repoName:repoName})
+        useTerminalStore.getState().setPwd(`/${repoName}`)
         useTerminalStore.getState().setRepo(repoName!)
         console.log('Navigating to new repo',repoName,repoId)
     }
@@ -38,7 +39,7 @@ export async function repoNodesLoader({ params }: LoaderFunctionArgs){
         
     }
     catch(error){
-        console.error('Some error happened in the loader!',error);
+        console.error('Some error happened in the node loader!',error);
         throw error;
     }
 }

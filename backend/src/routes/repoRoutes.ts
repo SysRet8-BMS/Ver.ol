@@ -2,7 +2,7 @@ import express from "express"
 import multer from "multer";
 import fs from "fs";
 
-import {uploadController,getReposController,repoViewController, getNodesController} from "../controllers/repoController.js"
+import {uploadController,getReposController,repoViewController, getNodesController,getFileController} from "../controllers/repoController.js"
 export const repoRouter = express()
 
 // Make sure directories exist
@@ -18,5 +18,6 @@ and content of that repo is displayed
  */
 repoRouter.post("/api/upload", uploadController);
 repoRouter.get("/api/repos",getReposController);
+repoRouter.get("/api/getFile/:fileId",getFileController);
+repoRouter.get("/api/:commitId/:nodeId",getNodesController);
 repoRouter.get("/api/:repoId",repoViewController);
-repoRouter.get("/api/:commitId/:nodeId",getNodesController)

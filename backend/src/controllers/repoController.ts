@@ -3,6 +3,7 @@ import mongoose ,{ Types } from 'mongoose';
 import busboy from 'busboy';
 import unzipper from 'unzipper';
 import path from 'path'
+import mime from "mime-types";
 
 import * as storageService from '../services/storageService.js';
 import * as repoService from '../services/repoService.js';
@@ -26,6 +27,16 @@ export interface PushRequest extends Request {
     file: Express.Multer.File & {buffer: Buffer; };
 }
 
+const customMimeMap: Record<string, string> = {
+  ".py": "text/x-python",
+  ".ts": "text/typescript",
+  ".tsx": "text/typescript",
+  ".js": "text/javascript",
+  ".json": "application/json",
+  ".html": "text/html",
+  ".css": "text/css",
+  ".md": "text/markdown"
+};
 // --- Controller ---
 
 // Update the return type to allow returning a Response object for early exits
@@ -359,3 +370,34 @@ export const getNodesController = async(req:Request,res:Response):Promise<Respon
     const nodes = await Node.find({commitId:requestedCommitId,parentNodeId:requestedNodeId!})
     return res.status(200).json(nodes)
 }
+
+export const getFileController = async (req: Request, res: Response) => {
+  const authReq = req as unknown as AuthenticatedRequest;
+  const userId = authReq.user?.id; 
+  if (!userId) return res.status(401).json({ msg: "User ID not found in session." });
+
+  const fileId = req.params.fileId;
+  if (!fileId) return res.status(401).json('No fileId provided!');
+
+  const fileNode = await Node.findById(new Types.ObjectId(fileId));
+  if (!fileNode) return res.status(400).json('Requested file does not exist');
+
+  // detect extension
+  const ext = fileNode.name.substring(fileNode.name.lastIndexOf('.')).toLowerCase();
+  const mimeType = customMimeMap[ext] || mime.lookup(fileNode.name) || "application/octet-stream";
+
+  console.log('Mime type of ',fileNode.name,' is ',mimeType)
+  res.setHeader("Content-Type", mimeType);
+
+  const gfsFileId = fileNode.gridFSFileId;
+  if (!gfsFileId) return res.status(400).json('Requested file has no gridFS file id');
+
+  const gfs = getGfs();
+  const downloadStream = gfs.openDownloadStream(gfsFileId);
+  downloadStream.pipe(res);
+
+  downloadStream.on("error", (err) => {
+    console.error("GridFS download error:", err);
+    if (!res.headersSent) res.status(500).json({ error: "Error streaming file" });
+  });
+};
