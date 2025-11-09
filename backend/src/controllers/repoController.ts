@@ -1,14 +1,16 @@
 import type { Request, Response } from 'express';
-import mongoose ,{ Types } from 'mongoose';
+import { Types } from 'mongoose';
 import busboy from 'busboy';
 import unzipper from 'unzipper';
 import path from 'path'
 import mime from "mime-types";
 
+
 import * as storageService from '../services/storageService.js';
 import * as repoService from '../services/repoService.js';
 import { getGfs } from '../config/multer.js';
 
+import type { Change } from '../types.js';
 
 import type {IRepository} from '../models/repository.js'
 import type {ICommit} from '../models/commit.js';
@@ -18,6 +20,8 @@ import Commit from '../models/commit.js'
 import Node from '../models/node.js'
 import User from '../models/user.js'
 import type {AuthenticatedRequest} from '../models/user.js'
+import { getNodesByParent } from '../services/nodeService.js';
+import { createCommit, applyChangesToNewCommit } from '../services/commitService.js';
 
 // Replace this with the actual authenticated user ID later 
 // const AUTHOR_ID = new Types.ObjectId('60d5ec49c69d7b0015b8d28e');
@@ -37,6 +41,7 @@ const customMimeMap: Record<string, string> = {
   ".css": "text/css",
   ".md": "text/markdown"
 };
+
 // --- Controller ---
 
 // Update the return type to allow returning a Response object for early exits
@@ -325,7 +330,7 @@ export const repoViewController = async(req:Request, res:Response):Promise<Respo
         return res.status(400).json("Repository does not exist in repository collection!")
     }
     const latestCommitId = (repo!.commits).at(-1);
-    const repoRoot:INode|null = await Node.findOne({commitId:latestCommitId, parentId:null})
+    const repoRoot:INode|null = await Node.findOne({commitId:latestCommitId, parentNodeId:null})
 
     if(!repoRoot){
         return res.status(400).json("Root node for repository not found!")
@@ -339,37 +344,42 @@ export const repoViewController = async(req:Request, res:Response):Promise<Respo
     })
 
 
-}
+};
+
 //could merge above and this in future, for now lets keep these 2 seperate
 export const getNodesController = async(req:Request,res:Response):Promise<Response>=>{
     const authReq = req as unknown as AuthenticatedRequest;
     
-    // 2. Extract the SECURELY verified user ID from the request object
+    // Extract the SECURELY verified user ID from the request object
     const userId = authReq.user?.id; 
     
     // Check for userId and handle the response correctly (Fixes return type error by ensuring it's not a return)
     if (!userId) {
-        // We use return here to stop execution immediately, sending the response.
         return res.status(401).json({ msg: "User ID not found in session." });
     }
+
     const requestedCommitId = req.params.commitId;
     const requestedNodeId = req.params.nodeId;
+    // Cast request params into Types.ObjectId with validation
+    let requestedCommitObj: Types.ObjectId;
+    let requestedNodeObj: Types.ObjectId;
 
-    if(!userId){
-        return res.status(400).json("No userId provided!")
-    }
-    if(!requestedNodeId){
-        return res.status(400).json("No nodeId provided!")
-    }
-    //returns nodes of current user, of latest commit, whose parentId = repoId
-    const user = await User.findById(userId);
-    if(!user){
-        return res.status(400).json("Requested user does not exist")
+    try {
+        requestedCommitObj = new Types.ObjectId(requestedCommitId);
+    } catch (err) {
+        return res.status(400).json("Invalid commitId");
     }
 
-    const nodes = await Node.find({commitId:requestedCommitId,parentNodeId:requestedNodeId!})
+    try {
+        requestedNodeObj = new Types.ObjectId(requestedNodeId);
+    } catch (err) {
+        return res.status(400).json("Invalid nodeId");
+    }
+
+    const nodes = await getNodesByParent(requestedNodeObj);
     return res.status(200).json(nodes)
-}
+};
+
 
 export const getFileController = async (req: Request, res: Response) => {
   const authReq = req as unknown as AuthenticatedRequest;
@@ -400,4 +410,114 @@ export const getFileController = async (req: Request, res: Response) => {
     console.error("GridFS download error:", err);
     if (!res.headersSent) res.status(500).json({ error: "Error streaming file" });
   });
+};
+
+
+export const commitController = async(req: Request, res: Response): Promise<Response> => {
+    const authReq = req as unknown as AuthenticatedRequest;
+    const userId = authReq.user?.id;
+
+    console.log('Commit request received');
+    console.log('User ID:', userId);
+    console.log('Request body:', req.body);
+
+    if(!userId) {
+        return res.status(401).json({msg: "User ID is not in session"});
+    }
+
+    const { commitId, stagedChanges, repoId, message } = req.body;
+
+    console.log('Parsed values:', { commitId, stagedChanges, repoId, message });
+
+    // Validate commitId
+    let parentCommitId: Types.ObjectId;
+    try {
+        parentCommitId = new Types.ObjectId(commitId)
+    } catch (err) {
+        return res.status(400).json({ error: "Invalid commitId" });
+    }
+
+    // Validate repoId
+    let repoObjectId: Types.ObjectId;
+    try {
+        repoObjectId = new Types.ObjectId(repoId);
+    } catch (err) {
+        return res.status(400).json({ error: "Invalid repoId" });
+    }
+
+    // Verify if the repo belongs to the user
+    const user = await User.findById(userId);
+    if(!user?.repoList.includes(repoObjectId)) {
+        return res.status(403).json({ msg: "Access Denied" });
+    }
+
+    // Validate staged changes
+    if (!Array.isArray(stagedChanges)) {
+        return res.status(400).json({ error: "stagedChanges must be an array" });
+    }
+    const requestedChanges: Change[] = stagedChanges;
+
+    // Verify parent commit exists
+    const parentCommit = await Commit.findById(parentCommitId);
+    if(!parentCommit) {
+        return res.status(404).json({ error: "Parent commit not found" });
+    }
+
+    try {
+        // Create new commit
+        const newCommit = await createCommit(
+            new Types.ObjectId(),
+            repoObjectId,
+            new Types.ObjectId(userId),
+            message || "No message provided",
+            new Date(),
+            parentCommitId
+        );
+
+        // Apply changes to new commit
+        await applyChangesToNewCommit(
+            repoObjectId,
+            newCommit._id,
+            parentCommitId,
+            requestedChanges
+        );
+
+        return res.status(201).json({ 
+            msg: "Commit created successfully", 
+            commit: newCommit 
+        });
+    } catch (error) {
+        console.error("Error creating commit:", error);
+        return res.status(500).json({ error: "Failed to create commit" });
+    }
+}
+
+export const getCommitHistoryController = async(req: Request, res: Response): Promise<Response> => {
+    const authReq = req as unknown as AuthenticatedRequest;
+    const userId = authReq?.user.id;
+
+    if(!userId) {
+        return res.status(401).json({msg: "User Id not found in session"});
+    }
+
+    const repoId = req.body;
+    const tempRepoId = repoId as unknown as Types.ObjectId;
+
+    // verify if the repo belongs to the user, if it's a valid userId
+    const user = await User.findById(userId);
+    if(!user?.repoList.includes(tempRepoId))
+        return res.status(403).json({msg: "Access Denied"});
+
+    // get repo and populate it with the array of commits along with author details
+    const repo = await Repository.findById(repoId).populate({
+        path: 'author',
+        populate: {path: 'author', select: 'username email'}
+    });
+
+    if(!repo) {
+        return res.status(404).json({msg: "Repository not found!"});
+    }
+
+    // returns the array of commits if repository exists
+    return res.status(200).json({commits: repo.commits});
 };
