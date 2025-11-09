@@ -4,6 +4,18 @@ import FileTree from "./components/FileTree";
 import Terminal from "./components/Terminal";
 import { useRepoStore } from "./store/repoStore";
 
+const symbolMap = {
+  move: ">",
+  rename: "→",
+  delete: "-",
+};
+
+const colorMap = {
+  move: "text-blue-700",
+  rename: "text-orange-400",
+  delete: "text-red-700",
+};
+
 export default function RepoView() {
   const repoNodes = useLoaderData(); // keep typing minimal for now
 
@@ -36,15 +48,26 @@ export default function RepoView() {
             <div>
               <div className="font-bold text-xl">Mode: {mode}</div>
               <div>Staged Changes</div>
-              <ul className="list-disc pl-6">
+              <ul className="list-none pl-6">
                 {stagedChanges.map((change, idx) => (
                   <li key={idx}>
                     {change.type === "rename" &&
-                      `Rename node  ${change.payload.oldName} → ${change.payload.newName}`}
+
+                      <span className={colorMap[change.type]}>
+                        {`${symbolMap[change.type]} Renamed  ${change.payload.oldName} to ${change.payload.newName}`}
+                      </span>
+                    }       
                     {change.type === "move" &&
-                      `Move node ${change.payload.src} → ${change.payload.dest}`}
+                      <span className={colorMap[change.type]}>
+                        {`${symbolMap[change.type]} Moved ${change.payload.src} to ${change.payload.dest}`}
+                      </span>
+                    }
+
                     {change.type === "delete" &&
-                      `Delete node ${change.payload.deletedNodeName}`}
+                    <span className={colorMap[change.type]}>
+                      {`${symbolMap[change.type]} Deleted ${change.payload.deletedNodeName}`}
+                    </span>
+                    }
                   </li>
                 ))}
               </ul>
