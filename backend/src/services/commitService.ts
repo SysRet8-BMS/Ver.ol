@@ -3,7 +3,8 @@ import Node from "../models/node.js";
 import Repository from "../models/repository.js";
 import { Types } from "mongoose";
 import type { Change } from "../types.js";
-import { createNode, renameNode, moveNode, deleteNodeAndDescendants } from "./nodeService.js";
+import { createNode, renameNode, moveNode, deleteNodeAndDescendants, updateNode } from "./nodeService.js";
+import { uploadFileToGridFS } from "./storageService.js";
 
 export const createCommit = async(
     _id: Types.ObjectId,
@@ -80,6 +81,15 @@ export const applyChangesToNewCommit = async(
 
         if(change.type === "delete") {
             await deleteNodeAndDescendants(newNodeId);
+        }
+
+        if(change.type === "edit") {
+            // Convert string content to buffer for GridFS upload
+            const newFileContent = change.payload.newContent;
+            const fileBuffer = Buffer.from(newFileContent, 'utf-8');
+            const stringifiedRepoId = repoId as unknown as string;
+            const newGridFSFileId = await uploadFileToGridFS(fileBuffer, stringifiedRepoId);
+            await updateNode(newNodeId, newGridFSFileId);
         }
     }
 

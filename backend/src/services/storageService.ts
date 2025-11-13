@@ -4,7 +4,7 @@ import {getGfs} from '../config/multer.js';
 import {v4 as uuidv4} from 'uuid';
 
 // Function to stream the file buffer into GridFS
-export const uploadFileToGridFS = (fileBuffer: Buffer, repoName: string, commitMessage: string): Promise<mongo.BSON.ObjectId> => {
+export const uploadFileToGridFS = (fileBuffer: Buffer, repoName: string, commitMessage?: string): Promise<mongo.BSON.ObjectId> => {
     return new Promise((resolve, reject) => {
         const gfs = getGfs();
         if(!gfs) return reject(new Error("GridFS not initialized."));

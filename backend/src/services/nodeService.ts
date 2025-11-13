@@ -71,3 +71,14 @@ export const findAllDescendants = async(
     return descendants;
 };
 
+export const updateNode = async (
+    nodeId: Types.ObjectId,
+    newGridFSFileId: Types.ObjectId
+) => {
+    return await Node.findByIdAndUpdate(
+        nodeId, 
+        {$set: {gridFSFileId: newGridFSFileId}},
+        {new: true}
+    );
+};
+
