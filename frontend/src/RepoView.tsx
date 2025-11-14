@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useLoaderData ,Link} from "react-router";
+import { useLoaderData, Link, Form } from "react-router";
 import FileTree from "./components/FileTree";
 import Terminal from "./components/Terminal";
 import { useRepoStore } from "./store/repoStore";
@@ -102,6 +102,9 @@ export default function RepoView() {
         </div>
 
       <Button className="font-thin border-2"><Link to={`/app/commitsview/${repoId}`} >View Commits</Link></Button>
+      <Form method="post" action={`/app/delete/${repoId}`}>
+        <Button type="submit" className="font-thin border-2 bg-red">DELETE</Button>
+      </Form>
       <div className="mt-4 pt-4">
         <div className="text-4xl mb-4 font-bold">{repoName}</div>
 

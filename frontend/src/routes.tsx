@@ -14,6 +14,7 @@ import CommitsView from './CommitsView.tsx'
 import Commit from './Commit.tsx'
 import {newRepoAction} from './actions/newRepoAction.ts'
 import {loginAction, signUpAction} from './actions/authActions.ts'
+import {deleteRepoAction} from './actions/deleteRepoAction.ts'
 import PrivateRoute from './PrivateRoutes.tsx'
 import FileView from './FileView.tsx'
 
@@ -75,6 +76,15 @@ const routes:RouteObject[] = [
                 element:<CommitsView />,
                 loader:commitsLoader,
             },
+
+
+
+            {
+                path:"delete/:repoId",
+                action: deleteRepoAction,
+            },
+
+
             {
                 path:"commit/:repoId/:commitId",
                 element:<Commit />,
@@ -92,6 +102,8 @@ const routes:RouteObject[] = [
                 loader: fileContentLoader,
                 errorElement: <ErrorPage />
             }
+
+
         ]
     }
 ]
