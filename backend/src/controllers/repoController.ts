@@ -411,3 +411,61 @@ export const getFileController = async (req: Request, res: Response) => {
 
 
 
+export const delRepoController=async(req: Request, res: Response)=>{
+    const authReq = req as unknown as AuthenticatedRequest;
+    const repoId=req.params.repoId;
+    if(!repoId) return res.status(401).json('Repo ID not found');
+    const repo=await Repository.findById(repoId);
+    if(!repo) return res.status(401).json(`Repository with id: ${repoId} Not found`);
+    const repoOwnerId = repo.owner;
+
+    const gfs = getGfs();
+    const deleteFileOnGridFS = (async (fileId: Types.ObjectId) => {
+            try{
+                await gfs.delete(fileId);
+            }
+
+            catch(error) {
+                console.error("gridfs file could not be deleted with id", fileId)
+            }
+    });
+
+    for(const commit of repo.commits)
+    {
+        const nodes=await Node.find({
+            repoId:repoId,
+            commitId:commit
+        })
+        if(!nodes) return res.status(500).json(`No nodes belong to given commit:  ${commit}`);
+
+        nodes.forEach(async (node)=>{
+            if(node.type==="folder")
+            {
+                try {
+                await Node.findByIdAndDelete(node._id);
+                }
+
+                catch(error) {
+                    console.error(error);
+                    return res.status(500).json(`Node with id ${node._id} not found`)
+                }
+
+            }
+            else{
+                try {
+                    await deleteFileOnGridFS(node.gridFSFileId!);
+                    await Node.findByIdAndDelete(node._id);
+                }
+                catch(error) {
+                    console.error(error);
+                    return res.status(500).json(`Node with id ${node._id} not found`)
+                }
+                }
+            }
+        );
+        await Commit.findByIdAndDelete(commit);
+    }
+    await Repository.findByIdAndDelete(repoId);
+    await User.findByIdAndUpdate(repoOwnerId, {$pull: {repoList:repoId}})
+    return res.status(200).json(`Successfully deleted repository with id: ${repoId}`)
+}

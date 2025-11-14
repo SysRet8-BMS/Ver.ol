@@ -6,6 +6,7 @@ import {
     uploadController, getReposController, repoViewController, 
     getNodesController,
     getFileController,
+    delRepoController,
 } from "../controllers/repoController.js"
 import {
     getCommitHistoryController, commitController,getCommitInfoController
@@ -33,3 +34,4 @@ repoRouter.get("/api/getFile/:fileId", getFileController)
 repoRouter.get("/api/commitInfo/:repoId/:commitId",getCommitInfoController);
 repoRouter.get("/api/:commitId/:nodeId",getNodesController);
 repoRouter.get("/api/:repoId",repoViewController);
+repoRouter.delete("/api/delete/:repoId",delRepoController);
