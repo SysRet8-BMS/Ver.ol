@@ -4,6 +4,7 @@ import { useAuthStore } from "./authStore";
 import {listAll,cwd,renameHelper, move, delHelper, createHelper} from '../utils/helper'
 import { createCommitAction } from "../actions/commitAction";
 import { authFetch } from "../utils/authFetch";
+import type {UINode} from '../types'
 
 interface TerminalState {
   repoName: string;
@@ -194,7 +195,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         const { repoRoot, repoNodes } = await response.json();
 
         // Clear any expanded state and children to force fresh fetch
-        const cleanNodes = [repoRoot, ...repoNodes].map((node: any) => ({
+        const cleanNodes = [repoRoot, ...repoNodes].map((node: UINode) => ({
           ...node,
           isExpanded: false,
           children: undefined
@@ -210,7 +211,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         });
         
         // Update children for root node (only direct children from backend response)
-        const rootChildren = repoNodes.map((node: any) => ({
+        const rootChildren = repoNodes.map((node: UINode) => ({
           ...node,
           isExpanded: false,
           children: undefined
