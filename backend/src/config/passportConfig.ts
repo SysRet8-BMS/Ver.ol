@@ -28,7 +28,7 @@ export const configurePassport = (): void => {
         },
         async (username, password, done) => {
             try {
-                // 🚨 Includes the essential .select('+password') fix
+                // Includes the essential .select('+password') fix
                 const user = await User.findOne({ username: username.toLowerCase() }).select('+password');
 
                 if (!user) {
@@ -51,7 +51,7 @@ export const configurePassport = (): void => {
     ));
 
     // ==========================================================
-    // 2. JWT STRATEGY (Used for Protected Routes) 🚨 NEW
+    // 2. JWT STRATEGY (Used for Protected Routes)
     // ==========================================================
 
     const jwtOptions: StrategyOptions = {
