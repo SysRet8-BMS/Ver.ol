@@ -11,7 +11,7 @@ export default function PrivateRoute({
   redirectPath = "/login",
   children,
 }: PrivateRouteProps) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated) || localStorage.getItem('jwtToken');
   if (!isAuthenticated) {
     return <Navigate to={redirectPath} replace />;
   }
