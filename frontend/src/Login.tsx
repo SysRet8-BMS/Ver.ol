@@ -5,22 +5,12 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import SubmitButton from "@/components/SubmitButton.tsx"
-import {Link, Form, useNavigate} from 'react-router-dom'
+import {Link, Form} from 'react-router-dom'
 import {useAuthStore} from './store/authStore'
-import { useEffect } from 'react'
 
 export default function Login(){
-    const navigate = useNavigate();
     const { loginState, statusMessage } = useAuthStore();
-    
-    useEffect(() => {
-        if (loginState === 'success') {
-            const timer = setTimeout(() => {
-                navigate('/app');
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [loginState, navigate]);
+
     return (
         <div className="w-full max-w-md bg-white p-10">
             <h1 className="font-bold text-4xl mb-4 text-center">Login</h1>

@@ -1,4 +1,5 @@
 import type {ActionFunctionArgs} from 'react-router'
+import {redirect} from 'react-router'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 import {useAuthStore} from '../store/authStore'
@@ -33,7 +34,7 @@ export async function loginAction({ request }: ActionFunctionArgs){
         useAuthStore.setState({loginState:'success', statusMessage:'Successfully logged in. Happy contributing!...'})
 
         console.log('Successfully logged in. Happy contributing!...');
-        return;
+        return redirect('/app');
     }
     catch(err){
         console.error(err);
