@@ -16,7 +16,9 @@ export async function repoNodesLoader({ params }: LoaderFunctionArgs){
         console.log('Navigating to new repo',repoName,repoId)
     }
     console.log('repository id:',repoId)
-
+    
+    useRepoStore.getState().setIsViewingCommit(false);
+    useRepoStore.setState({commitNodes: []});  
     const nodes = useRepoStore.getState().nodes
     if(nodes && nodes.length > 0){
         return nodes.filter(node=>node.parentNodeId===repoId)

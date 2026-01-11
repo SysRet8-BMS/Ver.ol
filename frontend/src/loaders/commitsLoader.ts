@@ -36,14 +36,16 @@ export async function commitInfoLoader({params}:LoaderFunctionArgs){
         const data = await res.json();
         console.log('data from response', data)
         const {repoRoot, repoName, commit, nodes} = data;
-        useRepoStore.getState().setNodes([...nodes,repoRoot])
+        //instead of changing nodes, set commitNodes, and in appendChildren use extra state of commitview
+        useRepoStore.getState().setIsViewingCommit(true);
+        useRepoStore.getState().setCommitNodes([...nodes,repoRoot])
         useRepoStore.getState().appendChildren(repoRoot._id,nodes);
-        console.log('commit repoNodes in store',useRepoStore.getState().nodes)
+        console.log('commit repoNodes in store',useRepoStore.getState().commitNodes)
 
         return {
             repoName,
             commit,
-            nodes:useRepoStore.getState().nodes
+            nodes:useRepoStore.getState().commitNodes //use commitNodes instead
         }
 
     }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronRight, ChevronDown, Folder as FolderIcon } from "lucide-react";
 import { useRepoStore } from "../store/repoStore";
 import File from "./File";
-import { appendChildrenNodes, findNode } from "../utils/helper";
+import { appendChildrenNodes, findNodeHelper } from "../utils/helper";
 
 export default function Folder({ nodeId, level }: { nodeId: string; level: number }) {
   const [loading, setLoading] = useState(false);
@@ -12,11 +12,18 @@ export default function Folder({ nodeId, level }: { nodeId: string; level: numbe
   const toggleExpand = useRepoStore((s) => s.toggleExpand);
   
   // Find node from subscribed data
-  const node = findNode(nodeId, mode);
-  
+  const node = useRepoStore((s) => {
+    let source;
+    if(s.isViewingCommit === true) source = s.commitNodes;
+    else if (s.mode === "staging") source = s.stagedNodes;
+    else source = s.nodes;
+
+    return findNodeHelper(source, nodeId);
+  });
+
   // Add logging
   console.log(`Folder ${nodeId} rendering, mode: ${mode}, node:`, node?.name, 'children:', node?.children?.map(c => c.name));
-  
+    
   if (!node) return null;
 
   const handleClick = async () => {
