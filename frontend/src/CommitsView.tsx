@@ -1,9 +1,10 @@
 import { useLoaderData ,Link} from "react-router";
+import { useRepoStore } from "./store/repoStore";
 import type { Commit } from "./types";
 
 export default function CommitsView() {
   const { commits } = useLoaderData() as { commits: Commit[] };
-
+  
   // Sort commits by date (descending)
   const sortedCommits = [...commits].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -19,7 +20,7 @@ export default function CommitsView() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Commit History</h1>
+      <h1 className="text-3xl font-bold mb-6">Commit History of {useRepoStore.getState().repoName}</h1>
       <div className="space-y-8">
         {Object.entries(groupedCommits).map(([date, commitsForDate]) => (
 
@@ -34,7 +35,7 @@ export default function CommitsView() {
             </h2>
             <div className="space-y-3 border-l-2 border-gray-300 pl-4">
               {commitsForDate.map((commit) => (
-                <Link to={`/app/commit/${commit.repoId}/${commit._id}`}>
+                <Link key={commit._id} to={`/app/commit/${commit.repoId}/${commit._id}`}>
                     <div
                     key={commit._id}
                     className="flex flex-col bg-gray-50 hover:bg-gray-100 transition p-3 rounded-lg shadow-sm"

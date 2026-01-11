@@ -104,8 +104,6 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
 
       if (modeVal === "viewing") {
         // enter confirmation mode
-        useRepoStore.getState().setMode(modeVal);
-
         set({ awaitingDiscardConfirm: true });
         return "Discard currently staged changes? (y/n)";
       }

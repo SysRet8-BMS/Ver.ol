@@ -144,7 +144,7 @@ export const getCommitInfoController = async(req:Request,res:Response):Promise<R
 
     const reqCommit = await Commit.findById(tempCommitId);
     if(!reqCommit) return res.status(500).json({msg:" Requested commit not found!"})
-    reqCommit.populate('author');
+    await reqCommit.populate('author');
 
     const repoRoot = await Node.findOne({
         commitId:tempCommitId,
@@ -157,7 +157,7 @@ export const getCommitInfoController = async(req:Request,res:Response):Promise<R
     })
     return res.status(200).json({
         repoRoot:repoRoot,
-        repoName:repoRoot.name,
+        repoName:repo.name,
         commit:reqCommit,
         nodes:nodes
     })

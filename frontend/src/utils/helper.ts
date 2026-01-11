@@ -5,14 +5,7 @@ import {useTerminalStore} from '../store/terminalStore';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
 
-//to fix folders not expanding in staging mode
-export function findNode(id: string, mode: 'staging' | 'viewing') {
-  const { nodes, stagedNodes } = useRepoStore.getState();
-  const targetNodes = mode === 'staging' ? stagedNodes : nodes;
-  return findNodeHelper(targetNodes, id);
-}
-
-function findNodeHelper(nodes:UINode[],id: string): UINode | null {
+export function findNodeHelper(nodes:UINode[],id: string): UINode | null {
   for (const node of nodes) {
     if (node._id === id) return node;
     if (node.children) {
@@ -38,6 +31,7 @@ export async function appendChildrenNodes(node: UINode) {
 
   console.log(`Received ${children.length} children for ${node.name}:`, children.map((c: UINode) => c.name));
   appendChildren(node._id, children);
+  console.log("after running appendChildren: ",node);
 }
 
 export function findcwdNode(pwd: string): UINode | null {
